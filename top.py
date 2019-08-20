@@ -2,16 +2,14 @@
 import json
 import sys
 from pathlib import Path
-from time import sleep
 
-from kython.misc import import_file
-
-hypothesis = import_file(Path('/L/repos/Hypothesis/hypothesis.py'), 'hypothesis')
-
-# https://hypothes.is/account/developer
-from hypothesis_secrets import HYPOTHESIS_USER, HYPOTHESIS_TOKEN
 
 def download():
+    from kython.misc import import_file
+    hypothesis = import_file(Path('/L/repos/Hypothesis/hypothesis.py'), 'hypothesis')
+    # https://hypothes.is/account/developer
+    from hypothesis_secrets import HYPOTHESIS_USER, HYPOTHESIS_TOKEN
+
     h = hypothesis.Hypothesis(
         username=HYPOTHESIS_USER,
         token=HYPOTHESIS_TOKEN,
@@ -38,8 +36,34 @@ def download():
 
     dump()
 
+def process():
+    import json
+    from pprint import pprint
+    from pathlib import Path
+    from kython import group_by_key
+    anns = json.loads(Path('./res.json').read_text())
+
+    anns = [a for a in anns if 'RhoChiPlanReviews' not in a['uri']]
+
+    groups = group_by_key(anns, key=lambda a: a['user'])
+    for k, g in sorted(groups.items(), key=lambda i: len(i[1])):
+        print(f'{k}: {len(g)}')
+        if len(g) < 10:
+            print('skipping')
+            continue
+
+        docs = []
+        for a in g:
+            title = a["document"].get("title", [None])[0]
+            uri = a["uri"]
+            docs.append(title or uri)
+        for d in sorted(docs):
+            print('   ' + d)
+
+
 def main():
-    download()
+    # download()
+    process()
 
 if __name__ == '__main__':
     main()
