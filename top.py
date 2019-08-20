@@ -3,6 +3,7 @@ import json
 import sys
 from pathlib import Path
 
+from my.links import is_visited
 
 def download():
     from kython.misc import import_file
@@ -48,17 +49,18 @@ def process():
     groups = group_by_key(anns, key=lambda a: a['user'])
     for k, g in sorted(groups.items(), key=lambda i: len(i[1])):
         print(f'{k}: {len(g)}')
-        if len(g) < 10:
-            print('skipping')
-            continue
-
         docs = []
         for a in g:
             title = a["document"].get("title", [None])[0]
             uri = a["uri"]
-            docs.append(title or uri)
-        for d in sorted(docs):
-            print('   ' + d)
+            if is_visited(uri):
+                docs.append((uri, a['links']['incontext']))
+                # TODO incontext??
+                # docs.append(title or uri)
+
+        for u, x in sorted(docs):
+            print('  ' + u)
+            print('    ' + x)
 
 
 def main():
